@@ -19,7 +19,7 @@ nmcli是NetworkManager的命令行工具，在查了它的help以后，我尝试
 
 ## 2020年11月16日  
 
-为了防止gnome崩溃时连系统都进不去的情况发生，我将开机运行的级别调到了3,即开机默认进入命令行。这个设置很简单，只需要  
+为了防止gnome崩溃时连系统都进不去的情况发生，我将开机运行的级别调到了3，即开机默认进入命令行。这个设置很简单，只需要  
 `systemctl set-default multi-user.target`  
 但问题是进入命令行界面的分辨率很低，字体很大，一屏显示不了几行，如果真的需要命令行救急，会影响效率（主要还是看着不爽）。于是尝试了一下修改tty的分辨率。可以修改  
 `/boot/grub2/grub.cfg`  
@@ -72,3 +72,24 @@ nmcli是NetworkManager的命令行工具，在查了它的help以后，我尝试
 `grub2-mkconfig -o /boot/grub2/grub.cfg`  
 即可生成新的grub.cfg文件。  
 如果只是想在某次启动时修改tty的分辨率（毕竟不会经常使用纯命令行界面），那么不需要修改任何配置文件，只需在开机grub页面按‘e’键，在`linux ($root)/vmlinuz-...`这一行末尾添加vga=0x034d，再按Ctrl+x启动即可。  
+
+## 2020年11月24日
+
+装了Windows和Linux双系统后会发现，Windows和Linux的系统时间总是相差8小时，Linux领先Windows8小时。这是因为Linux把硬件时间当作是协调世界时，东八区的本地时间就在此基础上加了8小时，而Windows默认将硬件时间当作是本地时间。用命令  
+`timedatectl`  
+即可查看系统时间配置信息，如下
+
+~~~null
+               Local time: 二 2020-11-24 10:35:09 CST
+           Universal time: 二 2020-11-24 02:35:09 UTC
+                 RTC time: 二 2020-11-24 02:35:09
+                Time zone: Asia/Shanghai (CST, +0800)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
+~~~
+
+RTC in local TZ: no 即表示未将硬件时间作为本地时间。  
+为了将Windows系统和Linux系统的时间统一，需将Windows也设置成把硬件时间作为协调世界时。目前只能通过修改注册表实现，命令如下  
+`REG ADD HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation /v RealTimeIsUniversal /t REG_DWORD /d 1`  
+至于为什么Wimdows迟迟不改为把硬件时间作为UTC，可以参考 [Why does Windows keep your BIOS clock on local time?](https://devblogs.microsoft.com/oldnewthing/20040902-00/?p=37983) 这篇文章，简而言之就是——历史遗留问题。  
