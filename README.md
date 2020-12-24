@@ -93,3 +93,22 @@ RTC in local TZ: no 即表示未将硬件时间作为本地时间。
 为了将Windows系统和Linux系统的时间统一，需将Windows也设置成把硬件时间作为协调世界时。目前只能通过修改注册表实现，命令如下  
 `REG ADD HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation /v RealTimeIsUniversal /t REG_DWORD /d 1`  
 至于为什么Wimdows迟迟不改为把硬件时间作为UTC，可以参考 [Why does Windows keep your BIOS clock on local time?](https://devblogs.microsoft.com/oldnewthing/20040902-00/?p=37983) 这篇文章，简而言之就是——历史遗留问题。  
+
+## 2020年12月24日
+
+Linux命令行界面下的串口数据调试一直都不是方便的事情，不像Windows下那样有很多图形界面的串口调试工具可以用。之前也听说过minicom之类的工具，但没有深入研究。而且我目前更需要在Linux命令行下面监听串口的数据，而不是手动调试。数据调试在程序开发的过程中必然是做过的，只是在生产环境中还是有可能出现意料之外的情况，又无法在仅有命令行界面的生产设备中进行Debug，因此需要进行串口数据的监听。  
+socat工具功能强大，用来做串口转发和监听绰绰有余。用socat可以对串口、网络、文件、标准输入输出流等我们能想象到的绝大部分的IO形式进行相互转换，并监听。在我的应用场景中，我将串口设备的数据转发到一个虚拟串口，将调试目标应用软件连接的串口从真实串口换到虚拟串口，这样就实现了应用程序的串口数据的监听。  
+命令如下  
+`socat -d -d -x /dev/ttyS0,b9600,cs8,cstopb=0,icanon=0,min=128,time=1,echo=0,ignoreeof PTY,link=/tmp/pty0,rawer,echo=0,ignoreeof`  
+将软件连接的串口从/dev/ttyS0切换到/tmp/pty0即可。  
+监听的部分数据如下  
+~~~null
+< 2020/12/24 18:15:40.435492  length=8 from=15464 to=15471
+ 01 03 00 00 00 0a c5 cd
+> 2020/12/24 18:15:40.607036  length=25 from=48400 to=48424
+ 01 03 14 00 01 00 02 00 03 00 04 00 05 00 06 00 07 00 08 00 09 00 0a 8f 16
+< 2020/12/24 18:15:41.611513  length=8 from=15472 to=15479
+ 01 03 00 00 00 0a c5 cd
+> 2020/12/24 18:15:41.783927  length=25 from=48425 to=48449
+ 01 03 14 00 01 00 02 00 03 00 04 00 05 00 06 00 07 00 08 00 09 00 0a 8f 16
+~~~
