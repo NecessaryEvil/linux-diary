@@ -101,7 +101,8 @@ socat工具功能强大，用来做串口转发和监听绰绰有余。用socat�
 命令如下  
 `socat -d -d -x /dev/ttyS0,b9600,cs8,cstopb=0,icanon=0,min=128,time=1,echo=0,ignoreeof PTY,link=/tmp/pty0,rawer,echo=0,ignoreeof`  
 将软件连接的串口从/dev/ttyS0切换到/tmp/pty0即可。  
-监听的部分数据如下  
+监听的部分数据如下
+
 ~~~null
 < 2020/12/24 18:15:40.435492  length=8 from=15464 to=15471
  01 03 00 00 00 0a c5 cd
@@ -112,3 +113,21 @@ socat工具功能强大，用来做串口转发和监听绰绰有余。用socat�
 > 2020/12/24 18:15:41.783927  length=25 from=48425 to=48449
  01 03 14 00 01 00 02 00 03 00 04 00 05 00 06 00 07 00 08 00 09 00 0a 8f 16
 ~~~
+
+## 2021年12月22日
+
+配置Linux的串口终端（在CentOS7上实际操作），编辑/etc/default/grub，添加或修改下列几项为：
+
+~~~null
+GRUB_SERIAL_COMMAND="serial -speed=115200 -unit=0 -word=8 -parity=no -stop=1"
+GRUB_TERMINAL_OUTPUT="serial console"
+GRUB_TERMINAL_INPUT="serial console"
+~~~
+
+在 GRUB_CMDLINE_LINUX 这一项的值的最后面添加 console=ttyS0,115200。  
+运行  
+`grub2-mkconfig -o $(find /boot -name grub.cfg)`  
+重新生成grub.cfg。  
+查看/etc/securetty文件，里面是否有一行 ttyS0，如果没有则加上。  
+把开机运行级别调整到3，不然串口终端交互有问题，几乎无法使用。  
+最后重启即可。  
